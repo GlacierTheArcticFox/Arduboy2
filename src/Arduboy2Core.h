@@ -177,7 +177,7 @@
 
 #ifdef SLIMBOY
 #define PIN_SPEAKER_1 9  /**< The pin number of the first lead of the speaker */
-#define PIN_SPEAKER_2 11 /**< The pin number of the second lead of the speaker */
+#define PIN_SPEAKER_2 9 /**< The pin number of the second lead of the speaker */
 
 #define SPEAKER_1_PORT PORTB
 #define SPEAKER_1_DDR DDRB
@@ -185,7 +185,7 @@
 
 #define SPEAKER_2_PORT PORTB
 #define SPEAKER_2_DDR DDRB
-#define SPEAKER_2_BIT PORTB3
+#define SPEAKER_2_BIT PORTB1
 
 #else
 #define PIN_SPEAKER_1 5  /**< The pin number of the first lead of the speaker */

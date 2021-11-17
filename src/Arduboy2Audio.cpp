@@ -48,10 +48,10 @@ void Arduboy2Audio::saveOnOff()
 
 void Arduboy2Audio::begin()
 {
-  if (EEPROM.read(EEPROM_AUDIO_ON_OFF))
-    on();
-  else
-    off();
+  //if (EEPROM.read(EEPROM_AUDIO_ON_OFF))
+  on();
+  //else
+  //  off();
 }
 
 bool Arduboy2Audio::enabled()

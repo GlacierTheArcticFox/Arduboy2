@@ -148,9 +148,9 @@ void Arduboy2Core::boot()
   ADMUX = RAND_SEED_IN_ADMUX;
 
   bootPins();
-  bootSPI();
-  bootOLED();
-  bootPowerSaving();
+  //bootSPI();
+  //bootOLED();
+  //bootPowerSaving();
 }
 
 #ifdef ARDUBOY_SET_CPU_8MHZ
@@ -443,6 +443,7 @@ void Arduboy2Core::paint8Pixels(uint8_t pixels)
 
 void Arduboy2Core::paintScreen(const uint8_t *image)
 {
+  /*
 #ifdef SLIMBOY
   // I2C
   for (uint8_t i=0; i<(WIDTH*HEIGHT/(16*8));) {
@@ -461,7 +462,7 @@ void Arduboy2Core::paintScreen(const uint8_t *image)
   {
     SPItransfer(pgm_read_byte(image + i));
   }
-#endif
+#endif*/
 }
 
 // paint from a memory buffer, this should be FAST as it's likely what
@@ -472,6 +473,7 @@ void Arduboy2Core::paintScreen(const uint8_t *image)
 // It is specifically tuned for a 16MHz CPU clock and SPI clocking at 8MHz.
 void Arduboy2Core::paintScreen(uint8_t image[], bool clear)
 {
+  /*
 #ifdef SLIMBOY
   // I2C
   uint16_t i;
@@ -510,7 +512,7 @@ void Arduboy2Core::paintScreen(uint8_t image[], bool clear)
       [len_lsb] "M"   (WIDTH * (HEIGHT / 8 * 2) & 0xFF), // 2: for delay loop multiplier
       [clear]   "r"   (clear)
   );
-#endif
+#endif*/
 }
 
 void Arduboy2Core::blank()

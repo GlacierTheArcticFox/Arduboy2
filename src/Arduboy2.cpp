@@ -8,6 +8,12 @@
 #include "ab_logo.c"
 #include "glcdfont.c"
 
+//#define SPI_SPEED (100000000UL)
+
+#include "ST7920_SPI.h"
+#include <SPI.h>
+
+ST7920_SPI lcd(10);
 //================================
 //========== class Rect ==========
 //================================
@@ -47,9 +53,18 @@ Arduboy2Base::Arduboy2Base()
 // provides by default
 void Arduboy2Base::begin()
 {
+  SPI.begin();
+  lcd.init();
+  lcd.cls();
+  display();
+  /*u8g2.setBufferPtr(sBuffer);
+  u8g2.initDisplay();
+  u8g2.clearDisplay();
+  u8g2.setPowerSave(0);*/
+
   boot(); // raw hardware
 
-  display(); // blank the display (sBuffer is global, so cleared automatically)
+  //display(); // blank the display (sBuffer is global, so cleared automatically)
 
   flashlight(); // light the RGB LED and screen if UP button is being held.
 
@@ -196,7 +211,7 @@ void Arduboy2Base::bootLogoShell(void (*drawLogo)(int16_t))
   for (int16_t y = -16; y <= 24; y++) {
     if (pressed(RIGHT_BUTTON)) {
       digitalWriteRGB(RGB_OFF, RGB_OFF, RGB_OFF); // all LEDs off
-      return;
+      //return;
     }
 
     if (showLEDs && y == 4) {
@@ -209,21 +224,23 @@ void Arduboy2Base::bootLogoShell(void (*drawLogo)(int16_t))
     display(CLEAR_BUFFER);
     (*drawLogo)(y); // call the function that actually draws the logo
     display();
-    delayShort(15);
+    delayShort(5);
   }
 
   if (showLEDs) {
     digitalWriteRGB(GREEN_LED, RGB_OFF);  // green LED off
     digitalWriteRGB(BLUE_LED, RGB_ON);    // blue LED on
   }
-  delayShort(400);
+  delayShort(2000);
   digitalWriteRGB(BLUE_LED, RGB_OFF);
 
   bootLogoExtra();
 }
 
 // Virtual function overridden by derived class
-void Arduboy2Base::bootLogoExtra() { }
+void Arduboy2Base::bootLogoExtra() {
+
+}
 
 // wait for all buttons to be released
 void Arduboy2Base::waitNoButtons() {
@@ -334,6 +351,8 @@ void Arduboy2Base::drawPixel(int16_t x, int16_t y, uint8_t color)
   }
   #endif
 
+  lcd.drawPixel(x, y, color);
+/*
   uint16_t row_offset;
   uint8_t bit;
 
@@ -365,7 +384,7 @@ void Arduboy2Base::drawPixel(int16_t x, int16_t y, uint8_t color)
   );
   uint8_t data = sBuffer[row_offset] | bit;
   if (!(color & _BV(0))) data ^= bit;
-  sBuffer[row_offset] = data;
+  sBuffer[row_offset] = data;*/
 }
 #if 0
 // For reference, this is the C++ equivalent
@@ -391,9 +410,10 @@ void Arduboy2Base::drawPixel(int16_t x, int16_t y, uint8_t color)
 
 uint8_t Arduboy2Base::getPixel(uint8_t x, uint8_t y)
 {
-  uint8_t row = y / 8;
+  /*uint8_t row = y / 8;
   uint8_t bit_position = y % 8;
-  return (sBuffer[(row*WIDTH) + x] & _BV(bit_position)) >> bit_position;
+  return (sBuffer[(row*WIDTH) + x] & _BV(bit_position)) >> bit_position;*/
+  return lcd.scr[y*(WIDTH/8)+x/8] & (1 << ((x % 8)*-1+7)) ? 1 : 0;
 }
 
 void Arduboy2Base::drawCircle(int16_t x0, int16_t y0, uint8_t r, uint8_t color)
@@ -594,7 +614,12 @@ void Arduboy2Base::drawFastVLine
 void Arduboy2Base::drawFastHLine
 (int16_t x, int16_t y, uint8_t w, uint8_t color)
 {
-  int16_t xEnd; // last x point + 1
+  int end = x+w;
+  for (int a = max(0,x); a < min(end,WIDTH); a++)
+  {
+    drawPixel(a,y,color);
+  }
+  /*int16_t xEnd; // last x point + 1
 
   // Do y bounds checks
   if (y < 0 || y >= HEIGHT)
@@ -639,7 +664,7 @@ void Arduboy2Base::drawFastHLine
         *pBuf++ &= mask;
       }
       break;
-  }
+  }*/
 }
 
 void Arduboy2Base::fillRect
@@ -665,6 +690,8 @@ void Arduboy2Base::fillScreen(uint8_t color)
   //    sBuffer[i] = color;
   // }
 
+  memset(lcd.scr, color, WIDTH * HEIGHT / 8);
+  /*
   // This asm version is hard coded for 1024 bytes. It doesn't use the defined
   // WIDTH and HEIGHT values. It will have to be modified for a different
   // screen buffer size.
@@ -697,7 +724,7 @@ void Arduboy2Base::fillScreen(uint8_t color)
       "+z" (bPtr)
     :
     :
-  );
+  );*/
 }
 
 void Arduboy2Base::drawRoundRect
@@ -845,41 +872,7 @@ void Arduboy2Base::drawBitmap
   if (x+w < 0 || x > WIDTH-1 || y+h < 0 || y > HEIGHT-1)
     return;
 
-  int yOffset = abs(y) % 8;
-  int sRow = y / 8;
-  if (y < 0) {
-    sRow--;
-    yOffset = 8 - yOffset;
-  }
-  int rows = h/8;
-  if (h%8!=0) rows++;
-  for (int a = 0; a < rows; a++) {
-    int bRow = sRow + a;
-    if (bRow > (HEIGHT/8)-1) break;
-    if (bRow > -2) {
-      for (int iCol = 0; iCol<w; iCol++) {
-        if (iCol + x > (WIDTH-1)) break;
-        if (iCol + x >= 0) {
-          if (bRow >= 0) {
-            if (color == WHITE)
-              sBuffer[(bRow*WIDTH) + x + iCol] |= pgm_read_byte(bitmap+(a*w)+iCol) << yOffset;
-            else if (color == BLACK)
-              sBuffer[(bRow*WIDTH) + x + iCol] &= ~(pgm_read_byte(bitmap+(a*w)+iCol) << yOffset);
-            else
-              sBuffer[(bRow*WIDTH) + x + iCol] ^= pgm_read_byte(bitmap+(a*w)+iCol) << yOffset;
-          }
-          if (yOffset && bRow<(HEIGHT/8)-1 && bRow > -2) {
-            if (color == WHITE)
-              sBuffer[((bRow+1)*WIDTH) + x + iCol] |= pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset);
-            else if (color == BLACK)
-              sBuffer[((bRow+1)*WIDTH) + x + iCol] &= ~(pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset));
-            else
-              sBuffer[((bRow+1)*WIDTH) + x + iCol] ^= pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset);
-          }
-        }
-      }
-    }
-  }
+  lcd.drawBitmap(bitmap, x, y, w, h);
 }
 
 
@@ -937,7 +930,7 @@ struct BitStreamReader
 
 void Arduboy2Base::drawCompressed(int16_t sx, int16_t sy, const uint8_t *bitmap, uint8_t color)
 {
-  // set up decompress state
+  /*// set up decompress state
   BitStreamReader cs = BitStreamReader(bitmap);
 
   // read header
@@ -1027,22 +1020,23 @@ void Arduboy2Base::drawCompressed(int16_t sx, int16_t sy, const uint8_t *bitmap,
     }
 
     spanColour ^= 0x01; // toggle colour bit (bit 0) for next span
-  }
+  }*/
 }
 
 void Arduboy2Base::display()
 {
-  paintScreen(sBuffer);
+  lcd.display(0);
 }
 
 void Arduboy2Base::display(bool clear)
 {
-  paintScreen(sBuffer, clear);
+  lcd.display(0);
+  lcd.cls();
 }
 
 uint8_t* Arduboy2Base::getBuffer()
 {
-  return sBuffer;
+  return 0;
 }
 
 bool Arduboy2Base::pressed(uint8_t buttons)

@@ -1308,7 +1308,7 @@ class Arduboy2Base : public Arduboy2Core
    *
    * \see getBuffer()
    */
-  static uint8_t sBuffer[(HEIGHT*WIDTH)/8];
+  static uint8_t sBuffer[1]; //(HEIGHT*WIDTH)/8
 
  protected:
   // helper function for sound enable/disable system control
