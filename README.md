@@ -7,3 +7,9 @@ This is a port of the [Slimboy](https://github.com/harbaum/Arduboy2) library.
 
 ## Breadboard:
 ![Breadboard](breadboard.png)
+
+## NOTE:
+- not all games work with this port
+- the framebuffer is diffrent
+- this has only been tested for arduino uno/nano
+- im bad at programming
