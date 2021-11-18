@@ -13,3 +13,4 @@ This is a port of the [Slimboy](https://github.com/harbaum/Arduboy2) library.
 - the framebuffer is diffrent
 - this has only been tested for arduino uno/nano
 - im bad at programming
+- it's not finished
