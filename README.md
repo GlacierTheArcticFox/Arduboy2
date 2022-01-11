@@ -10,7 +10,7 @@ This is a port of the [Slimboy](https://github.com/harbaum/Arduboy2) library.
 
 ## NOTE:
 - not all games work with this port
-- the framebuffer is diffrent
+- the framebuffer is different
 - this has only been tested for arduino uno/nano
 - im bad at programming
 - it's not finished
